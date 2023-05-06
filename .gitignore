@@ -1,3 +1,4 @@
 node_modules/
 dist/
+plugins/erc20/data/
 work.log

@@ -13,11 +13,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Serve the static index.html file
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "../dist/public")));
 
 // Default route to index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
+  res.sendFile(path.join(__dirname, "../dist/public/index.html"));
 });
 
 app.get("/transactions/erc20", async (req, res) => {
