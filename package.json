@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "generate": "ts-node src/index.ts",
+    "generate": "ts-node src/generate.ts",
     "build": "tsc",
     "prestart": "npm run build"
   },
