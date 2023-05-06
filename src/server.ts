@@ -3,6 +3,8 @@ import path from "path";
 import Web3 from "web3";
 import { getErc20Transfers } from '../plugins/erc20'
 
+
+
 // Replace with your Ethereum node's URL
 const ethNodeUrl = "http://localhost:8545";
 const web3 = new Web3(ethNodeUrl);

@@ -27,30 +27,35 @@ world.addBody(groundBody);
 
 // Load texture
 const textureLoader = new THREE.TextureLoader();
-textureLoader.load(textureURL, function (texture) {
- // Coins
-  const coins = [];
-  const coinBodies = [];
+fetch('/transactions/erc20')
+  .then((response) => response.json())
+  .then((tokens) => {
+    const coins = [];
+    const coinBodies = [];
 
-  for (let i = 0; i < 10; i++) {
-    const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 100);
-    const material = new THREE.MeshBasicMaterial({ map: texture });
-    const coin = new THREE.Mesh(geometry, material);
+    tokens.forEach((token) => {
+      const textureURL = token.image;
 
-    const coinBody = new CANNON.Body({
-      mass: 1,
-      shape: new CANNON.Cylinder(1, 1, 0.1, 100),
-      position: new CANNON.Vec3(Math.random() * 10 - 5, 1, Math.random() * 10 - 5),
-      velocity: new CANNON.Vec3(Math.random() * 5 - 2.5, Math.random() * 10, Math.random() * 5 - 2.5),
+      textureLoader.load(textureURL, (texture) => {
+        const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 100);
+        const material = new THREE.MeshBasicMaterial({ map: texture });
+        const coin = new THREE.Mesh(geometry, material);
+
+        const coinBody = new CANNON.Body({
+          mass: 1,
+          shape: new CANNON.Cylinder(1, 1, 0.1, 100),
+          position: new CANNON.Vec3(Math.random() * 10 - 5, 1, Math.random() * 10 - 5),
+          velocity: new CANNON.Vec3(Math.random() * 5 - 2.5, Math.random() * 10, Math.random() * 5 - 2.5),
+        });
+
+        world.addBody(coinBody);
+        coinBodies.push(coinBody);
+
+        coin.position.copy(coinBody.position);
+        scene.add(coin);
+        coins.push(coin);
+      });
     });
-
-    world.addBody(coinBody);
-    coinBodies.push(coinBody);
-
-    coin.position.copy(coinBody.position);
-    scene.add(coin);
-    coins.push(coin);
-  }
 
   camera.position.set(0, 10, 20);
   camera.lookAt(new THREE.Vector3(0, 1, 0));
