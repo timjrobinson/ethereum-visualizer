@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "generate": "ts-node src/generate.ts",
-    "build": "tsc",
+    "build": "tsc && npm run buildfe",
     "prestart": "npm run build",
     "buildfe": "rollup -c \"rollup-config.js\""
   },

@@ -13,6 +13,7 @@ import {
 } from 'three';
 
 import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 import { Body, Plane, NaiveBroadphase, Vec3, Cylinder, World  } from 'cannon-es';
 
@@ -50,6 +51,48 @@ window.addEventListener("mousemove", (event) => {
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 });
 
+// PointerLockControls
+const controls = new PointerLockControls(camera, document.body);
+
+document.addEventListener("click", () => {
+  controls.lock();
+});
+
+// Movement
+const velocity = new Vector3();
+const direction = new Vector3();
+const speed = 5;
+
+document.addEventListener("keydown", (event) => {
+  switch (event.code) {
+    case "KeyW":
+      direction.z = -1;
+      break;
+    case "KeyS":
+      direction.z = 1;
+      break;
+    case "KeyA":
+      direction.x = 1;
+      break;
+    case "KeyD":
+      direction.x = -1;
+      break;
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  switch (event.code) {
+    case "KeyW":
+    case "KeyS":
+      direction.z = 0;
+      break;
+    case "KeyA":
+    case "KeyD":
+      direction.x = 0;
+      break;
+  }
+});
+
 // Physics
 const world = new World();
 world.gravity.set(0, -9.82, 0);
@@ -70,7 +113,7 @@ fetch('/transactions/erc20')
     const coins = [];
     const coinBodies = [];
 
-    tokens.forEach((token) => {
+    tokens.forEach((token, index) => {
       const textureURL = token.image;
 
       textureLoader.load(textureURL, (texture) => {
@@ -82,8 +125,21 @@ fetch('/transactions/erc20')
           mass: 1,
           shape: new Cylinder(1, 1, 0.1, 100),
           position: new Vec3(Math.random() * 10 - 5, 1, Math.random() * 10 - 5),
-          velocity: new Vec3(Math.random() * 5 - 2.5, Math.random() * 10, Math.random() * 5 - 2.5),
+          // velocity: new Vec3(Math.random() * 5 - 2.5, Math.random() * 10, Math.random() * 5 - 2.5),
+          velocity: new Vec3(0,0,0),
         });
+        
+        // Make the coin stand up
+        coin.rotation.x = Math.PI / 2;
+    
+        // Set the target position for the coin
+        coin.targetPosition = new Vector3(5, 5, 0);
+    
+        // Initialize rotation variables
+        coin.isSpinning = false;
+        coin.spinStartTime = 0;
+        coin.spinDuration = 1000; // Spin duration in milliseconds
+
 
         world.addBody(coinBody);
         coinBodies.push(coinBody);
@@ -104,10 +160,10 @@ fetch('/transactions/erc20')
     const dt = 1 / 60;
     world.step(dt);
 
-    for (let i = 0; i < coins.length; i++) {
-      coins[i].position.copy(coinBodies[i].position);
-      coins[i].quaternion.copy(coinBodies[i].quaternion);
-    }
+    // for (let i = 0; i < coins.length; i++) {
+    //   coins[i].position.copy(coinBodies[i].position);
+    //   coins[i].quaternion.copy(coinBodies[i].quaternion);
+    // }
 
     renderer.render(scene, camera);
     
@@ -125,10 +181,40 @@ fetch('/transactions/erc20')
     if (intersects.length > 0) {
       intersects[0].object.userData.outline = true;
     }
+    
+    // Update camera movement
+    if (controls.isLocked) {
+      velocity.x += direction.x * speed * 0.1;
+      velocity.z += direction.z * speed * 0.1;
+      controls.moveRight(-velocity.x * 0.1);
+      controls.moveForward(-velocity.z * 0.1);
+      velocity.multiplyScalar(0.9);
+    }
+    
+    // Update coins position and rotation
+    coins.forEach((coin) => {
+      // Move coin to its target position
+      coin.position.lerp(coin.targetPosition, 0.05);
+  
+      // Start spinning the coin after it reaches its target position
+      if (!coin.isSpinning && coin.position.distanceTo(coin.targetPosition) < 0.05) {
+        coin.isSpinning = true;
+        coin.spinStartTime = performance.now();
+      }
+  
+      // Rotate the coin on its axis
+      if (coin.isSpinning) {
+        const elapsedTime = performance.now() - coin.spinStartTime;
+        if (elapsedTime < coin.spinDuration) {
+          coin.rotation.z += 0.1;
+        } else {
+          coin.isSpinning = false;
+        }
+      }
+    });
   
     // Update outline effect
     effect.render(scene, camera);
-
     
   };
 
